@@ -1,10 +1,8 @@
 package com.pontoperfeito.pontoperfeito.model;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Setter;
 import lombok.Getter;
 import java.util.Date;
@@ -13,10 +11,9 @@ import java.util.Date;
 // @Table(name = "pagamentos")
 @Getter
 @Setter
-
 public class PagamentoModelo {
-  // @Id
-  // @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private Long pedido_id; //FK
   private Date paid_at;
