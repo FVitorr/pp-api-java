@@ -11,12 +11,10 @@ import java.util.Date;
 // @Table(name = "pagamentos")
 @Getter
 @Setter
-public class PagamentoModelo {
+public class PagamentoResponse {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-  private Long pedido_id; //FK
-  private Date paid_at;
-  private float valor_total;
-  private int situacao; // 1 - pago -- 2 - pendente -- 3 - concluido
+  private String pedido;
+  private float valor; //FK
+  private String status;
 }
