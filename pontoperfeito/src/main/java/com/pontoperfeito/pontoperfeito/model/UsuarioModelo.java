@@ -19,4 +19,9 @@ public class UsuarioModelo {
   private Long id;
   private String email;
   private String password;
+
+  public UsuarioModelo(String email, String password){
+    this.email = email;
+    this.password = password;
+  }
 }
