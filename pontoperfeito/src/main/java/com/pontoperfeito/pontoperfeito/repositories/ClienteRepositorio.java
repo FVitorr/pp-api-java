@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.pontoperfeito.pontoperfeito.model.Cliente;
+import com.pontoperfeito.pontoperfeito.model.Item;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -17,6 +19,15 @@ public class ClienteRepositorio {
     public ClienteRepositorio(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
+
+    public List<Cliente> buscarClientesPorNome(String nome) {
+        String sql = "SELECT * FROM clientes WHERE nome LIKE ?";
+        String parametroLike = "%" + nome + "%";
+        List<Cliente> resultados = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Cliente.class), parametroLike);
+
+    // Verifica se a lista de resultados está vazia e retorna um array vazio se for o caso
+    return resultados.isEmpty() ? new ArrayList<>() : resultados;
+}
 
     public List<Cliente> listarClientes() {
         String sql = "SELECT * FROM clientes";

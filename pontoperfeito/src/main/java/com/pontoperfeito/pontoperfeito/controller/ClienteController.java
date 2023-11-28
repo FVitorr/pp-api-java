@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import com.pontoperfeito.pontoperfeito.model.Cliente;
+import com.pontoperfeito.pontoperfeito.model.Item;
 import com.pontoperfeito.pontoperfeito.repositories.ClienteRepositorio;
 
 @RestController
@@ -18,6 +19,13 @@ public class ClienteController {
     @Autowired
     public ClienteController(ClienteRepositorio clienteRepositorio) {
         this.clienteRepositorio = clienteRepositorio;
+    }
+
+        @GetMapping("/clientes/busca/{nome}")
+        public ResponseEntity<List<Cliente>> buscarClientesPorNome(@PathVariable String nome) {
+        List<Cliente> clientes = clienteRepositorio.buscarClientesPorNome(nome);
+
+        return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/clientes")
