@@ -1,8 +1,5 @@
 package com.pontoperfeito.pontoperfeito.model;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +13,11 @@ import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -29,28 +31,31 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "cliente_id")
-    private Cliente cliente;  // Assuming you have a 'Cliente' class
+            // @JoinTable(
+    //  name = "clientes", 
+    //  joinColumns = @JoinColumn(name = "id_cliente"))
 
-    private Float valor;
+    @ManyToOne
+    @JoinColumn(name = "id_cliente")
+    private Cliente cliente;
 
     @CreationTimestamp
-    private Date dataPedido;  // Use creation timestamp for order date
+    private Date data_pedido; 
 
-    private Date estimativaEntrega;
-    private Date dataEntrega;
-
-    @Enumerated(EnumType.STRING)
-    private StatusPedido statusPedido;
+    private Date estimativa_entrega;
+    private Date data_entrega;
 
     @Enumerated(EnumType.STRING)
-    private StatusPagamento statusPagamento;
+    private StatusPedido status_pedido;
+
+    @Enumerated(EnumType.STRING)
+    private StatusPagamento status_pagamento;
 
     @ManyToMany
     @JoinTable(
-      name = "pedido_item", 
-      joinColumns = @JoinColumn(name = "pedido_id"), 
-      inverseJoinColumns = @JoinColumn(name = "item_id"))
+      name = "itens_pedido", 
+      joinColumns = @JoinColumn(name = "id_pedido"), 
+      inverseJoinColumns = @JoinColumn(name = "id_item"))
     private Set<Item> itens = new HashSet<>();
+
 }

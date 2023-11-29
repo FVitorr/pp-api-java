@@ -26,11 +26,7 @@ public class ItemController {
     public ResponseEntity<List<Item>> buscarItensPorNome(@PathVariable String nome) {
         List<Item> itens = itemRepositorio.buscarItensPorNome(nome);
 
-        // if (!itens.isEmpty()) {
             return ResponseEntity.ok(itens);
-        // } else {
-        //     return ResponseEntity.notFound().build();
-        // }
     }
 
     @GetMapping("/itens")
