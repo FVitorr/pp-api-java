@@ -62,7 +62,7 @@ public class PedidoRepositorio {
             pedido.setId(pedidoId);
             pedido.setEstimativa_entrega(resultSet.getDate("estimativa_entrega"));
             pedido.setData_entrega(resultSet.getDate("data_entrega"));
-            pedido.setStatus_pedido(StatusPedido.valueOf(resultSet.getString("status_pedido")));
+            pedido.setStatus_pedido(StatusPedido.valueOfm (resultSet.getString("status_pedido")));
             pedido.setStatus_pagamento(StatusPagamento.valueOf(resultSet.getString("status_pagamento")));
 
             Cliente cliente = new Cliente();
