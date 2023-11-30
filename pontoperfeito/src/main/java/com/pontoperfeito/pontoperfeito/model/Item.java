@@ -22,8 +22,8 @@ public class Item {
     public Item() {
     }
     // Construtor
-    public Item(Long id,String nome, Float valor, String descricao) {
-        this.id = id;
+    public Item(String nome, Float valor, String descricao) {
+        //this.id = id;
         this.nome = nome;
         this.valor = valor;
         this.descricao = descricao;

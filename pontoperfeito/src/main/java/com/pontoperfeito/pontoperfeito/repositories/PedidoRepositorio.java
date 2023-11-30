@@ -10,14 +10,25 @@ import com.pontoperfeito.pontoperfeito.model.StatusPagamento;
 import com.pontoperfeito.pontoperfeito.model.StatusPedido;
 import com.pontoperfeito.pontoperfeito.model.Cliente;
 import com.pontoperfeito.pontoperfeito.model.Item;
+import com.pontoperfeito.pontoperfeito.model.ItemPedido;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 public class PedidoRepositorio {
 
     private final JdbcTemplate jdbcTemplate;
+
     @Autowired
     public PedidoRepositorio(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -28,51 +39,57 @@ public class PedidoRepositorio {
         String parametroLike = "%" + nome + "%";
         List<Pedido> resultados = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Pedido.class), parametroLike);
 
-        // Verifica se a lista de resultados está vazia e retorna um array vazio se for o caso
+        // Verifica se a lista de resultados está vazia e retorna um array vazio se for
+        // o caso
         return resultados.isEmpty() ? new ArrayList<>() : resultados;
     }
 
-public List<Pedido> listarPedidos() {
-    String sql = "SELECT pedidos.id AS id_pedido, " +
-    "GROUP_CONCAT(CONCAT(itens.id, ' - ', itens.valor, ' - ', itens.nome) "+ 
-    "ORDER BY itens.id) AS itens_do_pedido, " +
-    "clientes.* FROM pedidos " +
-    "INNER JOIN clientes ON clientes.id = pedidos.id_cliente " +
-    "INNER JOIN itens_pedido ON itens_pedido.id_pedido = pedidos.id " +
-    "INNER JOIN itens ON itens.id = itens_pedido.id_item " +
-    "GROUP BY pedidos.id";
+    public List<Pedido> listarPedidos() {
+        String sql = "SELECT pedidos.*, " +
+                "GROUP_CONCAT(CONCAT(itens.id, ' - ', itens.valor, ' - ', itens.nome) ORDER BY itens.id) AS itens_do_pedido, "
+                +
+                "clientes.* " +
+                "FROM pedidos " +
+                "INNER JOIN clientes ON clientes.id = pedidos.id_cliente " +
+                "LEFT JOIN itens_pedido ON itens_pedido.id_pedido = pedidos.id " +
+                "LEFT JOIN itens ON itens.id = itens_pedido.id_item " +
+                "GROUP BY pedidos.id;";
 
-    // SELECT pedidos.*, clientes.* ,itens_pedido.* , itens.* FROM pedidos 
-    // INNER JOIN clientes ON clientes.id = pedidos.id_cliente 
-    // INNER JOIN itens_pedido ON itens_pedido.id_pedido = pedidos.id
-    // INNER JOIN itens ON itens.id = itens_pedido.id_item
+        return jdbcTemplate.query(sql, (resultSet, rowNum) -> {
+            Long pedidoId = resultSet.getLong("id");
 
-    return jdbcTemplate.query(sql, (resultSet, rowNum) -> {
-        Pedido pedido = new Pedido();
-        pedido.setId(resultSet.getLong("id"));
-        //pedido.setData_pedido(resultSet.getDate("data_pedido"));
-        pedido.setEstimativa_entrega(resultSet.getDate("estimativa_entrega"));
-        pedido.setData_entrega(resultSet.getDate("data_entrega"));
-        pedido.setStatus_pedido(StatusPedido.valueOf(resultSet.getString("status_pedido")));
-        pedido.setStatus_pagamento(StatusPagamento.valueOf(resultSet.getString("status_pagamento")));
+            Pedido pedido = new Pedido();
+            pedido.setId(pedidoId);
+            pedido.setEstimativa_entrega(resultSet.getDate("estimativa_entrega"));
+            pedido.setData_entrega(resultSet.getDate("data_entrega"));
+            pedido.setStatus_pedido(StatusPedido.valueOf(resultSet.getString("status_pedido")));
+            pedido.setStatus_pagamento(StatusPagamento.valueOf(resultSet.getString("status_pagamento")));
 
-        Cliente cliente = new Cliente();
-        cliente.setId(resultSet.getLong("id_cliente"));
-        cliente.setNome(resultSet.getString("nome"));
-        cliente.setRua(resultSet.getString("rua"));
-        cliente.setBairro(resultSet.getString("bairro"));
-        cliente.setNumero_endereco(resultSet.getString("numero_endereco"));
-        cliente.setCidade(resultSet.getString("cidade"));
-        cliente.setEstado(resultSet.getString("estado"));
-        cliente.setTelefone(resultSet.getString("telefone"));
-        cliente.setEmail(resultSet.getString("email"));
+            Cliente cliente = new Cliente();
+            cliente.setNome(resultSet.getString("nome"));
 
-        pedido.setCliente(cliente);
+            pedido.setCliente(cliente);
 
-        return pedido;
-    });
-}
+            String itensConcatenados = resultSet.getString("itens_do_pedido");
+            if (itensConcatenados != null) {
+                Set<Item> itens = Arrays.stream(itensConcatenados.split(","))
+                        .map(itemString -> {
+                            String[] itemInfo = itemString.split(" - ");
+                            if (itemInfo.length >= 3) {
+                                return new Item(itemInfo[2], Float.parseFloat(itemInfo[1]), itemInfo[0]);
+                            } else {
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull) // Filtra itens nulos, se houver
+                        .collect(Collectors.toSet());
+    
+                pedido.setItens(itens);
+            }
 
+            return pedido;
+        });
+    }
 
     public Pedido buscarPedidoPorId(Long id) {
         String sql = "SELECT * FROM pedidos WHERE id = ?";
@@ -88,9 +105,9 @@ public List<Pedido> listarPedidos() {
                 pedido.getEstimativa_entrega(),
                 pedido.getData_entrega(),
                 pedido.getStatus_pedido(),
-                pedido.getStatus_pagamento()
-        );
-        // Agora você precisa obter o ID gerado para associar aos itens e realizar o mesmo para a tabela itens_pedido
+                pedido.getStatus_pagamento());
+        // Agora você precisa obter o ID gerado para associar aos itens e realizar o
+        // mesmo para a tabela itens_pedido
     }
 
     public void atualizarPedido(Pedido pedido) {
@@ -103,14 +120,15 @@ public List<Pedido> listarPedidos() {
                 pedido.getData_entrega(),
                 pedido.getStatus_pedido(),
                 pedido.getStatus_pagamento(),
-                pedido.getId()
-        );
-        // Aqui você também precisará atualizar os itens na tabela itens_pedido conforme necessário
+                pedido.getId());
+        // Aqui você também precisará atualizar os itens na tabela itens_pedido conforme
+        // necessário
     }
 
     public void excluirPedido(Long id) {
         String sql = "DELETE FROM pedidos WHERE id = ?";
         jdbcTemplate.update(sql, id);
-        // Além disso, você pode precisar excluir os registros correspondentes na tabela itens_pedido
+        // Além disso, você pode precisar excluir os registros correspondentes na tabela
+        // itens_pedido
     }
 }
