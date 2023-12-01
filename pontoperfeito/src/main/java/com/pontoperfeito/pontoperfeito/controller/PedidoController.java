@@ -1,22 +1,30 @@
 package com.pontoperfeito.pontoperfeito.controller;
 
+import com.pontoperfeito.pontoperfeito.model.Cliente;
+import com.pontoperfeito.pontoperfeito.model.Item;
 import com.pontoperfeito.pontoperfeito.model.Pedido;
+import com.pontoperfeito.pontoperfeito.model.PedidoParams;
+import com.pontoperfeito.pontoperfeito.repositories.ClienteRepositorio;
 import com.pontoperfeito.pontoperfeito.repositories.PedidoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
 public class PedidoController {
 
     private final PedidoRepositorio pedidoRepositorio;
+    private final ClienteRepositorio clienteRepositorio;
 
     @Autowired
-    public PedidoController(PedidoRepositorio pedidoRepositorio) {
+    public PedidoController(PedidoRepositorio pedidoRepositorio, ClienteRepositorio clienteRepositorio) {
         this.pedidoRepositorio = pedidoRepositorio;
+        this.clienteRepositorio = clienteRepositorio;
     }
 
     @GetMapping("/pedidos/busca/{nome}")
@@ -42,9 +50,25 @@ public class PedidoController {
     }
 
     @PostMapping("/pedidos")
-    public ResponseEntity<Pedido> criarPedido(@RequestBody Pedido pedido) {
-        pedidoRepositorio.criarPedido(pedido);
-        return ResponseEntity.ok(pedido);
+    public ResponseEntity<Pedido> criarPedido(@RequestBody PedidoParams pedido) {
+        // Criar o pedido no banco de dados
+        Cliente cliente = clienteRepositorio.encontrarClientePorId(pedido.getId_cliente());
+        Pedido newPedido = new Pedido();
+        newPedido.setCliente(cliente);
+        // newPedido.setData_entrega(null);
+        // newPedido.setData_pedido(null);
+        newPedido.setEstimativa_entrega(pedido.getEstimativa_entrega());
+        newPedido.setStatus_pagamento(pedido.getStatus_pagamento());
+        newPedido.setStatus_pedido(pedido.getStatus_pedido());
+
+        Set<Long> itensSet = new HashSet<Long>(pedido.getItens());
+
+        Pedido r_Pedido = pedidoRepositorio.criarPedido(newPedido);
+
+        pedidoRepositorio.associarItensAoPedido(r_Pedido.getId(), itensSet);
+
+        // Retornar o pedido com os itens associados
+        return ResponseEntity.ok(r_Pedido);
     }
 
     @PutMapping("/pedidos/{id}")

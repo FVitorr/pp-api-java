@@ -27,6 +27,10 @@ public class Cliente {
   public Cliente() {
   }
 
+  public Cliente(int id) {
+    this.id = (long) id;
+}
+
   public Cliente(String nome, String rua, String bairro, String numero_endereco, String cidade, String estado, String telefone, String email) {
       this.nome = nome;
       this.rua = rua;

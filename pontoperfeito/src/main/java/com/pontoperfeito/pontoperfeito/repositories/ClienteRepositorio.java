@@ -19,7 +19,7 @@ public class ClienteRepositorio {
     public ClienteRepositorio(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
+    
     public List<Cliente> buscarClientesPorNome(String nome) {
         String sql = "SELECT * FROM clientes WHERE nome LIKE ?";
         String parametroLike = "%" + nome + "%";
