@@ -105,34 +105,6 @@ public class PedidoRepositorio {
         }
     }
 
-    public Pedido criarPedidoComItens(Pedido pedido) {
-        Calendar calendar = Calendar.getInstance();
-        java.sql.Date dataAtual = new java.sql.Date(calendar.getTime().getTime());
-    
-        String sql = "INSERT INTO pedidos (id_cliente, data_pedido, estimativa_entrega, data_entrega, status_pedido, status_pagamento) VALUES (?, ?, ?, ?, ?, ?)";
-    
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-    
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, pedido.getCliente().getId());
-            ps.setDate(2, dataAtual);
-            ps.setDate(3, new java.sql.Date(pedido.getEstimativa_entrega().getTime()));
-            ps.setNull(4, Types.DATE);
-            ps.setString(5, pedido.getStatus_pedido().name());
-            ps.setString(6, pedido.getStatus_pagamento().name());
-            return ps;
-        }, keyHolder);
-    
-        // Configurar o ID gerado no pedido
-        pedido.setId(keyHolder.getKey().longValue());
-    
-        // Associar os itens ao pedido
-        associarItensAoPedido(pedido.getId(), pedido.getItens());
-    
-        return pedido;
-    }
-
     public Pedido buscarPedidoPorId(Long id) {
         String sql = "SELECT * FROM pedidos WHERE id = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Pedido.class), id);
@@ -151,7 +123,7 @@ public class PedidoRepositorio {
             ps.setLong(1, pedido.getCliente().getId());
             ps.setDate(2, dataAtual);
             ps.setDate(3, new java.sql.Date(pedido.getEstimativa_entrega().getTime()));
-            ps.setDate(4, null); // Não está claro como este campo deve ser preenchido
+            ps.setDate(4, null);
             ps.setString(5, pedido.getStatus_pedido().toString());
             ps.setString(6, pedido.getStatus_pagamento().toString());
             return ps;
@@ -163,24 +135,36 @@ public class PedidoRepositorio {
         // Configura o ID gerado no objeto Pedido
         pedido.setId(idGerado);
 
-
         return pedido;
     }
 
 
-    public void atualizarPedido(Pedido pedido) {
-        String sql = "UPDATE pedidos SET id_cliente = ?, data_pedido = ?, estimativa_entrega = ?, data_entrega = ?, status_pedido = ?, status_pagamento = ? WHERE id = ?";
+    public Pedido atualizarPedido(Pedido pedido) {
+        // Atualiza apenas os campos modificáveis no pedido, evitando nulos
+        String sql = "UPDATE pedidos SET estimativa_entrega = ?, status_pedido = ?, status_pagamento = ? WHERE id = ?";
         jdbcTemplate.update(
                 sql,
-                pedido.getCliente().getId(),
-                pedido.getData_pedido(),
                 pedido.getEstimativa_entrega(),
-                pedido.getData_entrega(),
-                pedido.getStatus_pedido(),
-                pedido.getStatus_pagamento(),
+                pedido.getStatus_pedido().toString(),
+                pedido.getStatus_pagamento().toString(),
                 pedido.getId());
-        // Aqui você também precisará atualizar os itens na tabela itens_pedido conforme
-        // necessário
+    
+        // Atualiza os itens associados ao pedido
+        atualizarItensDoPedido(pedido.getId(), pedido.getItens());
+
+        return pedido;
+    }
+    
+    public void atualizarItensDoPedido(Long pedidoId, Set<Item> itens) {
+        // Remove todos os itens associados ao pedido
+        String sqlRemoverItens = "DELETE FROM itens_pedido WHERE id_pedido = ?";
+        jdbcTemplate.update(sqlRemoverItens, pedidoId);
+    
+        // Insere os novos itens associados ao pedido
+        String sqlInserirItens = "INSERT INTO itens_pedido (id_pedido, id_item, quantidade) VALUES (?, ?, 1)";
+        for (Item item : itens) {
+            jdbcTemplate.update(sqlInserirItens, pedidoId, item.getId());
+        }
     }
 
     public void excluirPedido(Long id) {

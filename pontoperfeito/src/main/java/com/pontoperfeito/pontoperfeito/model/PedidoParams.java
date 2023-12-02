@@ -19,7 +19,7 @@ public class PedidoParams {
 
     private Date estimativa_entrega;
 
-    //private Date data_entrega;
+    private Date data_entrega;
     private String observacoes;
 
     @Enumerated(EnumType.STRING)

@@ -72,12 +72,23 @@ public class PedidoController {
     }
 
     @PutMapping("/pedidos/{id}")
-    public ResponseEntity<Pedido> editarPedido(@PathVariable Long id, @RequestBody Pedido pedidoAtualizado) {
+    public ResponseEntity<Pedido> editarPedido(@PathVariable Long id, @RequestBody PedidoParams pedidoAtualizado) {
+
         Pedido pedido = pedidoRepositorio.buscarPedidoPorId(id);
 
+        Cliente clienteExists = clienteRepositorio.encontrarClientePorId(pedidoAtualizado.getId_cliente());
+
+        Pedido newPedido = new Pedido();
+        newPedido.setCliente(clienteExists);
+        newPedido.setData_entrega(pedidoAtualizado.getData_entrega());
+        // newPedido.setData_pedido(null);
+        newPedido.setEstimativa_entrega(pedidoAtualizado.getEstimativa_entrega());
+        newPedido.setStatus_pagamento(pedidoAtualizado.getStatus_pagamento());
+        newPedido.setStatus_pedido(pedidoAtualizado.getStatus_pedido());
+
         if (pedido != null) {
-            pedidoRepositorio.atualizarPedido(pedidoAtualizado);
-            return ResponseEntity.ok(pedidoAtualizado);
+            Pedido cliente = pedidoRepositorio.atualizarPedido(newPedido);
+            return ResponseEntity.ok(cliente);
         } else {
             return ResponseEntity.notFound().build();
         }
