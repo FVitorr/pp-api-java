@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Date;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -57,6 +58,7 @@ public class PedidoController {
         newPedido.setCliente(cliente);
         // newPedido.setData_entrega(null);
         // newPedido.setData_pedido(null);
+        newPedido.setObservacao(pedido.getObservacoes());
         newPedido.setEstimativa_entrega(pedido.getEstimativa_entrega());
         newPedido.setStatus_pagamento(pedido.getStatus_pagamento());
         newPedido.setStatus_pedido(pedido.getStatus_pedido());
@@ -74,21 +76,27 @@ public class PedidoController {
     @PutMapping("/pedidos/{id}")
     public ResponseEntity<Pedido> editarPedido(@PathVariable Long id, @RequestBody PedidoParams pedidoAtualizado) {
 
-        Pedido pedido = pedidoRepositorio.buscarPedidoPorId(id);
+        Pedido pedidoExists = pedidoRepositorio.buscarPedidoPorId(id);
 
-        Cliente clienteExists = clienteRepositorio.encontrarClientePorId(pedidoAtualizado.getId_cliente());
+        Cliente clienteExists = pedidoExists.getCliente();
 
         Pedido newPedido = new Pedido();
         newPedido.setCliente(clienteExists);
         newPedido.setData_entrega(pedidoAtualizado.getData_entrega());
+        newPedido.setObservacao(pedidoAtualizado.getObservacoes());
         // newPedido.setData_pedido(null);
         newPedido.setEstimativa_entrega(pedidoAtualizado.getEstimativa_entrega());
         newPedido.setStatus_pagamento(pedidoAtualizado.getStatus_pagamento());
         newPedido.setStatus_pedido(pedidoAtualizado.getStatus_pedido());
 
-        if (pedido != null) {
-            Pedido cliente = pedidoRepositorio.atualizarPedido(newPedido);
-            return ResponseEntity.ok(cliente);
+        Set<Long> itensSet = new HashSet<Long>(pedidoAtualizado.getItens());
+
+        if (pedidoExists != null) {
+            Pedido pedido = pedidoRepositorio.atualizarPedido(id, newPedido);
+
+            pedidoRepositorio.atualizarItensDoPedido(id, itensSet);
+
+            return ResponseEntity.ok(pedido);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -99,4 +107,22 @@ public class PedidoController {
         pedidoRepositorio.excluirPedido(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/pedidos/filtrar")
+public ResponseEntity<List<Pedido>> filtrarPedidos(
+        @RequestParam(required = false) String nomeCliente,
+        @RequestParam(required = false) String statusPagamento,
+        @RequestParam(required = false) String statusPedido,
+        @RequestParam(required = false) Date dataInicial,
+        @RequestParam(required = false) Date dataFinal) {
+
+        // Converte as strings de data para objetos java.sql.Date, se fornecidas
+        // java.sql.Date dataInicialSql = (dataInicial != null && !dataInicial.isEmpty()) ? java.sql.Date.valueOf(dataInicial) : null;
+        // java.sql.Date dataFinalSql = (dataFinal != null && !dataFinal.isEmpty()) ? java.sql.Date.valueOf(dataFinal) : null;
+
+        // Chama a função do repositório com os parâmetros fornecidos
+        List<Pedido> pedidosFiltrados = pedidoRepositorio.buscarPedidosPorFiltros(nomeCliente, statusPagamento, statusPedido, dataInicial, dataFinal);
+
+        return ResponseEntity.ok(pedidosFiltrados);
+}
 }

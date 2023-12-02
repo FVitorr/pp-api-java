@@ -26,8 +26,8 @@ public class Item {
         this.id = Long.valueOf(id);
     }
     // Construtor
-    public Item(String nome, Float valor, String descricao) {
-        //this.id = id;
+    public Item(Long id,String nome, Float valor, String descricao) {
+        this.id = id;
         this.nome = nome;
         this.valor = valor;
         this.descricao = descricao;

@@ -43,6 +43,7 @@ public class Pedido {
 
     private Date estimativa_entrega;
     private Date data_entrega;
+    private String observacao;
 
     @Enumerated(EnumType.STRING)
     private StatusPedido status_pedido;
