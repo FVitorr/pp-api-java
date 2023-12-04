@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @RestController
@@ -113,16 +115,26 @@ public ResponseEntity<List<Pedido>> filtrarPedidos(
         @RequestParam(required = false) String nomeCliente,
         @RequestParam(required = false) String statusPagamento,
         @RequestParam(required = false) String statusPedido,
-        @RequestParam(required = false) Date dataInicial,
-        @RequestParam(required = false) Date dataFinal) {
-
-        // Converte as strings de data para objetos java.sql.Date, se fornecidas
-        // java.sql.Date dataInicialSql = (dataInicial != null && !dataInicial.isEmpty()) ? java.sql.Date.valueOf(dataInicial) : null;
-        // java.sql.Date dataFinalSql = (dataFinal != null && !dataFinal.isEmpty()) ? java.sql.Date.valueOf(dataFinal) : null;
-
+        @RequestParam(required = false) String dataInicial,
+        @RequestParam(required = false) String dataFinal) {
+        
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        Date dataInicialDate = null;
+        Date dataFinalDate = null;
+        try{
+             dataInicialDate = (dataInicial != null && !dataInicial.isEmpty()) ? dateFormat.parse(dataInicial) : null;
+             dataFinalDate = (dataFinal != null && !dataFinal.isEmpty()) ? dateFormat.parse(dataFinal) : null;
+        }catch (ParseException e) {
+            // Trate a exceção de parsing de data aqui
+            e.printStackTrace();
+        }
+    
         // Chama a função do repositório com os parâmetros fornecidos
-        List<Pedido> pedidosFiltrados = pedidoRepositorio.buscarPedidosPorFiltros(nomeCliente, statusPagamento, statusPedido, dataInicial, dataFinal);
+        List<Pedido> pedidosFiltrados = pedidoRepositorio.buscarPedidosPorFiltros(nomeCliente, statusPagamento, statusPedido, dataInicialDate, dataFinalDate);
 
         return ResponseEntity.ok(pedidosFiltrados);
 }
+
 }
+
+
