@@ -30,10 +30,6 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-            // @JoinTable(
-    //  name = "clientes", 
-    //  joinColumns = @JoinColumn(name = "id_cliente"))
-
     @ManyToOne
     @JoinColumn(name = "id_cliente")
     private Cliente cliente;

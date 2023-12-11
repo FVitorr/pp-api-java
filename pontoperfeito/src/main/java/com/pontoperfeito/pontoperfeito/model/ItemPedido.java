@@ -27,6 +27,4 @@ public class ItemPedido {
     private Item item;
 
     private int quantidade;
-
-    // Outros campos necessários podem ser adicionados conforme necessário
 }
